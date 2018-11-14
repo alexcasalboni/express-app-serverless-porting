@@ -13,11 +13,11 @@ Resources:
   SignUpFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: app
-      Handler: index.lambdaHandler
+      CodeUri: app  # where the source code is (folder)
+      Handler: index.lambdaHandler  # where the source code is (file + function)
       Runtime: nodejs8.10
-      Timeout: 10
-      MemorySize: 1024
+      Timeout: 10  # in seconds
+      MemorySize: 1024  # in MB
       Environment:
         Variables:
           STARTUP_SIGNUP_TABLE: !Ref StartupSignupsTable
@@ -29,13 +29,17 @@ Resources:
             Path: /signup
             Method: post
       Policies:
-        - AWSLambdaExecute # Managed Policy
+        - AWSLambdaExecute  # basic permissions
+
+        # DynamoDB Write permissions
         - Version: '2012-10-17'
           Statement:
             - Effect: Allow
               Action:
                 - dynamodb:PutItem
               Resource: !GetAtt StartupSignupsTable.Arn
+
+        # SNS Publish permissions
         - Version: '2012-10-17'
           Statement:
             - Effect: Allow
@@ -47,8 +51,12 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       KeySchema:
-        HashKeyElement: {AttributeName: email, AttributeType: S}
-      ProvisionedThroughput: {ReadCapacityUnits: 1, WriteCapacityUnits: 1}
+        HashKeyElement:
+          AttributeName: email
+          AttributeType: S
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
 
   NewSignupQueue: 
     Type: AWS::SQS::Queue
@@ -57,12 +65,12 @@ Resources:
     Type: AWS::SNS::Topic
     Properties:
       Subscription:
-      - Endpoint: alex@alexcasalboni.com
+      - Endpoint: your-email@test.com  # this could be a Stack Parameter
         Protocol: email
-      - Endpoint:
-          Fn::GetAtt: [NewSignupQueue, Arn]
+      - Endpoint: !GetAtt NewSignupQueue.Arn
         Protocol: sqs
 
+  # this policy is needed so that SNS can send messages into SQS
   AllowSNS2SQSPolicy:
     Type: AWS::SQS::QueuePolicy
     Properties:
@@ -75,9 +83,8 @@ Resources:
               aws:SourceArn: !Ref NewSignupTopic
           Effect: Allow
           Principal: {AWS: '*'}
-          Resource:
-            Fn::GetAtt: [NewSignupQueue, Arn]
+          Resource: !GetAtt NewSignupQueue.Arn
           Sid: Allow-SNS-SendMessage
         Version: '2008-10-17'
       Queues:
-      - {Ref: NewSignupQueue}
+      - !Ref NewSignupQueue
