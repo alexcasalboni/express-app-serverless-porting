@@ -11,6 +11,8 @@
     "logs": "sam logs -n SignUpFunction --stack-name serverless-signup --tail",
     "sam-package": "sam package --template-file template.yml --s3-bucket serverless-signup-packages --output-template-file template-packaged.yml --region eu-west-1",
     "sam-deploy": "sam deploy --template-file template-packaged.yml --stack-name serverless-signup --capabilities CAPABILITY_IAM --region eu-west-1",
-    "deploy": "npm run sam-package; npm run sam-deploy;"
+    "deploy": "npm run sam-package; npm run sam-deploy;",
+    "endpoint": "aws cloudformation describe-stacks --stack-name serverless-signup --query 'Stacks[0].Outputs[?OutputKey==`Endpoint`].OutputValue' --output text",
+    "destroy": "aws cloudformation delete-stack --stack-name serverless-signup"
   }
 }
