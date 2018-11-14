@@ -48,12 +48,11 @@ Resources:
               Resource: !Ref NewSignupTopic
     
   StartupSignupsTable:
-    Type: AWS::DynamoDB::Table
+    Type: AWS::Serverless::SimpleTable
     Properties:
-      KeySchema:
-        HashKeyElement:
-          AttributeName: email
-          AttributeType: S
+      PrimaryKey:
+        Name: email
+        Type: String
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
@@ -88,3 +87,14 @@ Resources:
         Version: '2008-10-17'
       Queues:
       - !Ref NewSignupQueue
+
+Outputs:
+  Endpoint:
+    Value: !Join ["", [
+      "https://",
+      !Ref ServerlessRestApi,
+      ".execute-api.",
+      !Ref "AWS::Region",
+      ".amazonaws.com/",
+      !Ref ServerlessRestApiProdStage
+    ]]
